@@ -19,18 +19,18 @@ ref_fasta = '/data/repository/organisms/GRCm38_ensembl/genome_fasta/genome.fa'
 ref_trx = '/data/repository/organisms/GRCm38_ensembl/Ensembl/release-91/genes.bed'
 
 ## Prepare a fasta file for the reference transcriptome from ref_trx
-# cmd = "module load bedtools2 samtools; bedtools getfasta -fi "+ ref_fasta
-# cmd += " -s -split -name -bed "+ref_trx
-# cmd += " -fo  > "+ os.path.join(input_path, "reference_transcriptome.fa")
-# cmd += " ;samtools faidx "+os.path.join(input_path, "reference_transcriptome.fa")
-# print(cmd)
-# sp.check_output(cmd, shell = True)
+cmd = "module load bedtools2 samtools; bedtools getfasta -fi "+ ref_fasta
+cmd += " -s -split -name -bed "+ref_trx
+cmd += " -fo  > "+ os.path.join(input_path, "reference_transcriptome.fa")
+cmd += " ;samtools faidx "+os.path.join(input_path, "reference_transcriptome.fa")
+print(cmd)
+sp.check_output(cmd, shell = True)
 
-## Make a bed file with strands in the names
-# cmd = "awk 'BEGIN{OFS=FS=\"\t\"}{$4=$4\"(\"$6\")\"; print}' "+ref_trx
-# cmd += " > "+ os.path.join(input_path,"reference_transcriptome_renamed.bed")
-# print(cmd)
-# sp.check_output(cmd, shell = True)
+# Make a bed file with strands in the names
+cmd = "awk 'BEGIN{OFS=FS=\"\t\"}{$4=$4\"(\"$6\")\"; print}' "+ref_trx
+cmd += " > "+ os.path.join(input_path,"reference_transcriptome_renamed.bed")
+print(cmd)
+sp.check_output(cmd, shell = True)
 
 ## map to transcriptome
 for file in glob.glob(os.path.join(input_path, 'fastq', "*.fastq.gz")):
@@ -67,7 +67,7 @@ for file in glob.glob(os.path.join(input_path, 'fastq', "*.fastq.gz")):
     print(cmd)
     sp.check_output(cmd, shell = True)
 
-# sample comparison (Very very slow!)
+## sample comparison (Very very slow!)
 cmd = "/localenv/rabbani/anaconda/miniconda3/envs/ont/bin/nanocompore sampcomp "
 cmd += " --file_list1 " + os.path.join(input_path,"E12-EmxDOT1L-CTReventalign_collapse", "out_eventalign_collapse.tsv")
 cmd += " --file_list2 " + os.path.join(input_path,"E12-EmxDOT1L-KOeventalign_collapse", "out_eventalign_collapse.tsv")
@@ -90,31 +90,36 @@ sp.check_output(cmd, shell = True)
 
 print("sample comparison is done!")
 
-# Load database
+## Load database
 db = SampCompDB(
     db_fn = "/scratch/local/test_nanocompore/nanocompore_KO_condition/outSampComp.db",
     fasta_fn = ref_fasta)
 
-# Print general metadata information
+## Print general metadata information
 print(db)
 
-# Prit list of references containing valid data
+## Prit list of references containing valid data
 print(db.ref_id_list)
 
-# save all info:
-# Reload DB
-# db = SampCompDB (db_fn = "/scratch/local/test_nanocompore/nanocompore_KO_condition_debug_subsampled/outSampComp.db",
-#                  fasta_fn = ref_fasta)
+## save all info:
+## Reload DB
+db = SampCompDB (db_fn = "/scratch/local/test_nanocompore/nanocompore_KO_condition/outSampComp.db",
+                 fasta_fn = ref_fasta)
 
-# Save report
+Save report
 db.save_report(output_fn = os.path.join(input_path,"report.tsv"))
 
-# # save sig positions:
-# Reload DB
+## save sig positions:
+## Reload DB
 db = SampCompDB(db_fn = "/scratch/local/test_nanocompore/nanocompore_KO_condition/outSampComp.db",
                  fasta_fn = ref_fasta,
                  bed_fn= os.path.join(input_path,"reference_transcriptome_renamed.bed")
                  )
+print(db)
 
-# Save report
-db.save_to_bed(output_fn = os.path.join(input_path,"sig_positions.bed"))
+## Print list of references containing valid data
+print(db.results)
+
+## Save report
+db.save_to_bed(output_fn = os.path.join(input_path,"sig_positions.bed"),
+			   pvalue_field= "GMM_logit_pvalue_context_2")
